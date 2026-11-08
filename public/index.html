@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raposa Play</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#ff831d;font-family:Arial;color:#32184c;text-align:center}
+main{max-width:480px;margin:auto;padding:15px;background:linear-gradient(#ffb82e,#ff672b);min-height:100vh}
+h1{color:white;font-size:35px;text-shadow:3px 3px #7025b6}
+.fox{font-size:85px}
+.box{background:white;border:4px solid #432064;border-radius:18px;padding:15px;margin:14px 0}
+.banner{background:#803af0;color:#ffe34e;padding:15px;border-radius:12px;font-size:23px;font-weight:bold}
+.letter{font-size:65px;color:#ff8d17;font-weight:bold}
+button{background:#803af0;color:white;border:0;border-radius:12px;padding:14px;font-weight:bold;margin:5px;font-size:15px}
+input{width:100%;padding:13px;margin:5px 0;border:2px solid #ddd;border-radius:10px;font-size:16px}
+.answer{padding:8px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between}
+#timer{font-size:25px;color:#a52c23;font-weight:bold}
+</style>
+</head>
+<body>
+<main>
+<h1>🦊 RAPOSA PLAY</h1>
+<div class="fox" id="fox">🦊</div>
+
+<div class="box">
+<p>CATEGORIA</p>
+<div class="banner" id="category">ANIMAL</div>
+<p>LETRA</p>
+<div class="letter" id="letter">A</div>
+<div id="timer">45s</div>
+<button onclick="newRound()">NOVA RODADA</button>
+<button onclick="finish()">STOP!</button>
+</div>
+
+<div class="box">
+<h3>RESPOSTAS</h3>
+<div id="answers">Aguardando participantes...</div>
+</div>
+
+<div class="box">
+<h3>TESTAR RESPOSTAS</h3>
+<input id="name" placeholder="Nome do participante">
+<input id="word" placeholder="Sua resposta">
+<button onclick="send()">ENVIAR</button>
+</div>
+
+<div class="box">
+<h3>🏆 RANKING</h3>
+<div id="ranking">Nenhum jogador ainda.</div>
+</div>
+</main>
+
+<script>
+const cats=["ANIMAL","FRUTA","CIDADE","NOME","OBJETO","PAÍS","COMIDA","MARCA","FILME","TIME"];
+const letters="ABCDEFGHIJKLMNOPQRSTUV";
+let letter="A",time=45,active=false,clock=null;
+let answers=[],scores={};
+
+function newRound(){
+ clearInterval(clock);
+ answers=[];
+ letter=letters[Math.floor(Math.random()*letters.length)];
+ document.getElementById("letter").textContent=letter;
+ document.getElementById("category").textContent=cats[Math.floor(Math.random()*cats.length)];
+ document.getElementById("answers").textContent="Aguardando respostas...";
+ document.getElementById("timer").textContent="45s";
+ document.getElementById("fox").textContent="🦊";
+ time=45;active=true;
+ clock=setInterval(()=>{
+ time--;
+ document.getElementById("timer").textContent=time+"s";
+ if(time<=0)finish();
+ },1000);
+}
+
+function send(){
+ if(!active)return alert("Comece uma rodada!");
+ const name=document.getElementById("name").value.trim();
+ const word=document.getElementById("word").value.trim();
+ if(!name||!word)return alert("Preencha os campos!");
+ if(!word.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().startsWith(letter))
+ return alert("A resposta precisa começar com "+letter);
+ if(answers.some(a=>a.name.toLowerCase()===name.toLowerCase()))
+ return alert("Você já respondeu!");
+ answers.push({name,word});
+ document.getElementById("word").value="";
+ render();
+}
+
+function render(){
+ document.getElementById("answers").innerHTML=answers.map(a=>
+ `<div class="answer"><b>${safe(a.name)}</b>${safe(a.word)}</div>`
+ ).join("");
+}
+
+function finish(){
+ if(!active)return;
+ active=false;clearInterval(clock);
+ let groups={};
+ answers.forEach(a=>{
+ let k=a.word.toLowerCase();
+ groups[k]=(groups[k]||0)+1;
+ });
+ answers.forEach(a=>{
+ let pts=10/groups[a.word.toLowerCase()];
+ scores[a.name]=(scores[a.name]||0)+pts;
+ });
+ document.getElementById("fox").textContent="🦊🏆";
+ document.getElementById("answers").innerHTML=answers.map(a=>
+ `<div class="answer">${safe(a.name)}: ${safe(a.word)} <b>+${(10/groups[a.word.toLowerCase()]).toFixed(1)}</b></div>`
+ ).join("");
+ document.getElementById("ranking").innerHTML=
+ Object.entries(scores).sort((a,b)=>b[1]-a[1]).map((a,i)=>
+ `<div class="answer">${i+1}º ${safe(a[0])} <b>${a[1].toFixed(1)} pontos</b></div>`
+ ).join("");
+}
+function safe(s){
+ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+newRound();
+</script>
+</body>
+</html>

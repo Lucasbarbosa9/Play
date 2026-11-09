@@ -13,37 +13,32 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let connection;
+async function connectTikTok() {
+  const username = process.env.TIKTOK_USERNAME?.replace("@", "");
 
-app.get("/connect", async (req, res) => {
-  const username = String(req.query.user || "").replace("@", "");
-
-  if (!/^[a-zA-Z0-9._]{2,24}$/.test(username)) {
-    return res.status(400).send("Usuário inválido");
+  if (!username) {
+    console.log("Configure TIKTOK_USERNAME no Render.");
+    return;
   }
 
   try {
-    if (connection) await connection.disconnect();
-
-    connection = new TikTokLiveConnection(username);
+    const connection = new TikTokLiveConnection(username);
 
     connection.on(WebcastEvent.CHAT, event => {
       io.emit("chat", {
-        user: event.user?.displayId || "Visitante",
+        user: event.user?.uniqueId || "Visitante",
         message: event.content || ""
       });
     });
 
     await connection.connect();
-    res.send("Conectado à LIVE!");
+    console.log("Conectado à LIVE de @" + username);
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Erro ao conectar à LIVE");
+    console.error("Erro ao conectar ao TikTok:", error);
   }
-});
+}
 
-app.get("/", (req, res) => {
-  res.send("Raposa Play está funcionando!");
+server.listen(process.env.PORT || 3000, "0.0.0.0", () => {
+  console.log("Raposa Play online!");
+  connectTikTok();
 });
-
-server.listen(process.env.PORT || 3000, "0.0.0.0");

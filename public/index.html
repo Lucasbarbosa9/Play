@@ -3,123 +3,640 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#ff9418">
 <title>Raposa Play</title>
+<script src="/socket.io/socket.io.js"></script>
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#ff831d;font-family:Arial;color:#32184c;text-align:center}
-main{max-width:480px;margin:auto;padding:15px;background:linear-gradient(#ffb82e,#ff672b);min-height:100vh}
-h1{color:white;font-size:35px;text-shadow:3px 3px #7025b6}
-.fox{font-size:85px}
-.box{background:white;border:4px solid #432064;border-radius:18px;padding:15px;margin:14px 0}
-.banner{background:#803af0;color:#ffe34e;padding:15px;border-radius:12px;font-size:23px;font-weight:bold}
-.letter{font-size:65px;color:#ff8d17;font-weight:bold}
-button{background:#803af0;color:white;border:0;border-radius:12px;padding:14px;font-weight:bold;margin:5px;font-size:15px}
-input{width:100%;padding:13px;margin:5px 0;border:2px solid #ddd;border-radius:10px;font-size:16px}
-.answer{padding:8px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between}
-#timer{font-size:25px;color:#a52c23;font-weight:bold}
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+ --orange:#ff9418;
+ --red:#ff3d27;
+ --purple:#7534df;
+ --dark:#291344;
+ --yellow:#ffe34d;
+}
+
+html,body{
+ width:100%;
+ height:100%;
+ overflow:hidden;
+ font-family:"Trebuchet MS",Arial,sans-serif;
+ background:var(--orange);
+}
+
+body{display:flex;justify-content:center}
+
+#game{
+ position:relative;
+ width:100%;
+ height:100dvh;
+ max-width:650px;
+ overflow:hidden;
+ padding:12px;
+ display:flex;
+ flex-direction:column;
+ gap:9px;
+ background:
+ radial-gradient(circle at 10% 15%,#fff4a522 0 3px,transparent 4px),
+ radial-gradient(circle at 80% 40%,#fff4a522 0 4px,transparent 5px),
+ linear-gradient(160deg,#ffb91d,#ff801b 55%,#ff3826);
+}
+
+#game:before{
+ content:"✦     ☆      ♧      ✧      ☆";
+ position:absolute;
+ inset:0;
+ font-size:32px;
+ line-height:110px;
+ word-spacing:20px;
+ color:white;
+ opacity:.12;
+ pointer-events:none;
+ overflow:hidden;
+}
+
+header,.hero,.answers,.prompt,.bottom,.controls{
+ position:relative;
+ z-index:1;
+}
+
+header{
+ height:8%;
+ min-height:48px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+}
+
+.logo{
+ color:white;
+ font-size:clamp(23px,6vw,36px);
+ font-weight:1000;
+ text-shadow:3px 3px var(--purple),4px 5px var(--dark);
+}
+
+.logo span{color:var(--yellow)}
+
+.status{
+ background:#fff;
+ color:var(--dark);
+ border:3px solid var(--dark);
+ border-radius:20px;
+ padding:7px 10px;
+ font-size:11px;
+ font-weight:1000;
+}
+
+.status i{
+ display:inline-block;
+ width:8px;
+ height:8px;
+ background:#aaa;
+ border-radius:50%;
+ margin-right:5px;
+}
+
+.status.online i{background:#24c75a}
+
+.hero{
+ height:21%;
+ min-height:125px;
+ display:grid;
+ grid-template-columns:29% 71%;
+ align-items:center;
+}
+
+.letter-circle{
+ width:min(25vw,125px);
+ height:min(25vw,125px);
+ border-radius:50%;
+ background:white;
+ border:7px solid var(--dark);
+ box-shadow:0 0 0 5px var(--yellow),0 7px var(--dark);
+ display:grid;
+ place-items:center;
+ color:var(--orange);
+ font-size:clamp(55px,15vw,85px);
+ font-weight:1000;
+ text-shadow:2px 3px #ffd34c;
+ transform:rotate(-5deg);
+}
+
+.category-area{text-align:center}
+
+.category-label{
+ color:white;
+ font-size:14px;
+ font-weight:1000;
+ text-shadow:2px 3px var(--dark);
+ margin-bottom:8px;
+}
+
+.ribbon{
+ background:linear-gradient(#a16bff,#7133dc);
+ color:var(--yellow);
+ border:5px solid var(--dark);
+ border-radius:14px;
+ padding:12px 5px;
+ font-size:clamp(17px,4.5vw,25px);
+ font-weight:1000;
+ text-shadow:2px 3px var(--dark);
+ box-shadow:0 6px var(--dark);
+}
+
+.subtitle{
+ color:white;
+ font-size:11px;
+ font-weight:900;
+ text-shadow:2px 2px var(--dark);
+ margin-top:10px;
+}
+
+.answers{
+ flex:1;
+ min-height:0;
+ background:white;
+ border:5px solid var(--dark);
+ border-radius:22px;
+ box-shadow:0 7px #a52d18;
+ padding:12px;
+ display:flex;
+ flex-direction:column;
+}
+
+.answers-title{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ color:var(--dark);
+ font-size:18px;
+ font-weight:1000;
+}
+
+.counter{
+ width:46px;
+ height:46px;
+ border-radius:50%;
+ background:var(--yellow);
+ border:4px solid var(--dark);
+ display:grid;
+ place-items:center;
+ font-size:24px;
+ color:var(--purple);
+}
+
+.answer-list{
+ flex:1;
+ min-height:0;
+ overflow-y:auto;
+ padding-top:8px;
+}
+
+.answer-item{
+ display:flex;
+ justify-content:space-between;
+ gap:8px;
+ padding:9px 5px;
+ border-bottom:2px dashed #ddd;
+ color:var(--dark);
+ font-size:14px;
+ font-weight:900;
+ animation:appear .2s ease;
+}
+
+.answer-item b{color:var(--purple)}
+
+@keyframes appear{
+ from{opacity:0;transform:translateY(8px)}
+ to{opacity:1;transform:translateY(0)}
+}
+
+.empty{
+ text-align:center;
+ color:#a49aac;
+ font-weight:900;
+ margin-top:35px;
+ font-size:14px;
+}
+
+.tip{
+ color:#786d83;
+ font-size:11px;
+ font-weight:900;
+ padding-top:8px;
+}
+
+.tip strong{color:var(--purple)}
+
+.prompt{
+ min-height:43px;
+ height:7%;
+ border:4px solid var(--dark);
+ background:var(--purple);
+ color:white;
+ border-radius:30px;
+ display:grid;
+ place-items:center;
+ text-align:center;
+ padding:5px;
+ font-size:clamp(11px,3vw,15px);
+ font-weight:1000;
+ text-shadow:2px 2px var(--dark);
+ box-shadow:0 4px var(--dark);
+}
+
+.bottom{
+ height:17%;
+ min-height:105px;
+ display:grid;
+ grid-template-columns:1fr 43%;
+ gap:8px;
+}
+
+.mascot-area{
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ gap:5px;
+}
+
+.mascot{
+ font-size:clamp(48px,13vw,72px);
+ text-align:center;
+ filter:drop-shadow(3px 4px var(--dark));
+}
+
+.speech{
+ background:white;
+ color:var(--dark);
+ border:4px solid var(--dark);
+ border-radius:16px;
+ padding:9px;
+ font-size:clamp(10px,2.8vw,14px);
+ font-weight:900;
+ text-align:center;
+ box-shadow:0 4px var(--dark);
+}
+
+.scoreboard{
+ background:white;
+ border:4px solid var(--dark);
+ border-radius:17px;
+ padding:8px;
+ box-shadow:0 5px var(--dark);
+ overflow:hidden;
+}
+
+.score-title{
+ font-size:13px;
+ font-weight:1000;
+ color:var(--dark);
+ margin-bottom:5px;
+}
+
+.score-row{
+ display:flex;
+ justify-content:space-between;
+ gap:3px;
+ padding:4px 0;
+ border-bottom:1px solid #eee;
+ font-size:clamp(9px,2.5vw,12px);
+ font-weight:900;
+ color:var(--dark);
+}
+
+.score-row b{color:var(--purple)}
+
+.controls{
+ height:7%;
+ min-height:46px;
+ display:flex;
+ gap:8px;
+ align-items:center;
+}
+
+button{
+ border:3px solid var(--dark);
+ border-radius:14px;
+ background:var(--yellow);
+ color:var(--dark);
+ font-size:12px;
+ font-weight:1000;
+ padding:10px 8px;
+ box-shadow:0 4px var(--dark);
+ cursor:pointer;
+}
+
+button:active{
+ transform:translateY(3px);
+ box-shadow:0 1px var(--dark);
+}
+
+.controls button{flex:1}
+#stop{background:#ff4b38;color:white}
+#fullscreen{background:var(--purple);color:white}
+
+@media(max-height:700px){
+ #game{gap:5px;padding:7px}
+ .hero{min-height:105px}
+ .bottom{min-height:90px}
+ .mascot{font-size:45px}
+ .answers{padding:8px}
+ .answer-item{padding:5px}
+}
+
 </style>
 </head>
+
 <body>
-<main>
-<h1>🦊 RAPOSA PLAY</h1>
-<div class="fox" id="fox">🦊</div>
+<main id="game">
 
-<div class="box">
-<p>CATEGORIA</p>
-<div class="banner" id="category">ANIMAL</div>
-<p>LETRA</p>
-<div class="letter" id="letter">A</div>
-<div id="timer">45s</div>
-<button onclick="newRound()">NOVA RODADA</button>
-<button onclick="finish()">STOP!</button>
+<header>
+ <div class="logo">RAPOSA <span>PLAY</span></div>
+ <div class="status" id="status"><i></i> CONECTANDO</div>
+</header>
+
+<section class="hero">
+ <div class="letter-circle" id="letter">A</div>
+ <div class="category-area">
+  <div class="category-label">CATEGORIA</div>
+  <div class="ribbon" id="category">ANIMAL</div>
+  <div class="subtitle" id="subtitle">Responda antes que o tempo acabe!</div>
+ </div>
+</section>
+
+<section class="answers">
+ <div class="answers-title">
+  <div class="counter" id="counter">0</div>
+  RESPOSTAS
+ </div>
+ <div class="answer-list" id="answers">
+  <div class="empty">Aguardando participantes...</div>
+ </div>
+ <div class="tip">Respostas repetidas dividem pontos. <strong>Seja original!</strong></div>
+</section>
+
+<div class="prompt" id="prompt">
+ COMENTE SUA RESPOSTA NA LIVE!
 </div>
 
-<div class="box">
-<h3>RESPOSTAS</h3>
-<div id="answers">Aguardando participantes...</div>
+<section class="bottom">
+ <div class="mascot-area">
+  <div class="mascot">🦊</div>
+  <div class="speech" id="speech">
+   Vamos começar! Prepare sua resposta!
+  </div>
+ </div>
+
+ <div class="scoreboard">
+  <div class="score-title">🏆 RANKING</div>
+  <div id="ranking">
+   <div class="score-row">Aguardando jogadores...</div>
+  </div>
+ </div>
+</section>
+
+<div class="controls">
+ <button onclick="newRound()">NOVA RODADA</button>
+ <button id="stop" onclick="finish()">STOP!</button>
+ <button id="fullscreen" onclick="fullScreen()">TELA CHEIA</button>
 </div>
 
-<div class="box">
-<h3>TESTAR RESPOSTAS</h3>
-<input id="name" placeholder="Nome do participante">
-<input id="word" placeholder="Sua resposta">
-<button onclick="send()">ENVIAR</button>
-</div>
-
-<div class="box">
-<h3>🏆 RANKING</h3>
-<div id="ranking">Nenhum jogador ainda.</div>
-</div>
 </main>
 
 <script>
-const cats=["ANIMAL","FRUTA","CIDADE","NOME","OBJETO","PAÍS","COMIDA","MARCA","FILME","TIME"];
-const letters="ABCDEFGHIJKLMNOPQRSTUV";
-let letter="A",time=45,active=false,clock=null;
-let answers=[],scores={};
+const socket = typeof io === "function" ? io() : null;
+
+const categories = [
+ "ANIMAL","FRUTA","CIDADE OU ESTADO",
+ "NOME","OBJETO","PAÍS","COMIDA",
+ "MARCA","FILME","TIME","PROFISSÃO",
+ "PERSONALIDADE","COR","DESENHO"
+];
+
+const letters = "ABCDEFGHIJKLMNOPQRSTUV";
+
+let letter = "A";
+let time = 45;
+let active = false;
+let clock = null;
+let answers = [];
+let scores = {};
+let round = 0;
+
+const $ = id => document.getElementById(id);
+
+function normalize(value){
+ return value.normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"")
+  .toUpperCase().trim();
+}
 
 function newRound(){
  clearInterval(clock);
- answers=[];
- letter=letters[Math.floor(Math.random()*letters.length)];
- document.getElementById("letter").textContent=letter;
- document.getElementById("category").textContent=cats[Math.floor(Math.random()*cats.length)];
- document.getElementById("answers").textContent="Aguardando respostas...";
- document.getElementById("timer").textContent="45s";
- document.getElementById("fox").textContent="🦊";
- time=45;active=true;
- clock=setInterval(()=>{
- time--;
- document.getElementById("timer").textContent=time+"s";
- if(time<=0)finish();
+
+ answers = [];
+ round++;
+
+ letter = letters[Math.floor(Math.random()*letters.length)];
+
+ const category = categories[
+  Math.floor(Math.random()*categories.length)
+ ];
+
+ $("letter").textContent = letter;
+ $("category").textContent = category;
+ $("subtitle").textContent =
+  "Vale mais quem ninguém falar!";
+ $("counter").textContent = "0";
+ $("answers").innerHTML =
+  '<div class="empty">Aguardando participantes...</div>';
+ $("prompt").textContent =
+  "COMENTE " + category + " COM A LETRA " + letter;
+ $("speech").textContent =
+  "Uma resposta por pessoa! Boa sorte!";
+ $("ranking").innerHTML = "";
+ $("letter").animate(
+  [{transform:"scale(.7) rotate(-5deg)"},{transform:"scale(1) rotate(-5deg)"}],
+  {duration:350}
+ );
+
+ time = 45;
+ active = true;
+ updateTimer();
+
+ clock = setInterval(()=>{
+  time--;
+  updateTimer();
+  if(time<=0) finish();
  },1000);
 }
 
-function send(){
- if(!active)return alert("Comece uma rodada!");
- const name=document.getElementById("name").value.trim();
- const word=document.getElementById("word").value.trim();
- if(!name||!word)return alert("Preencha os campos!");
- if(!word.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().startsWith(letter))
- return alert("A resposta precisa começar com "+letter);
- if(answers.some(a=>a.name.toLowerCase()===name.toLowerCase()))
- return alert("Você já respondeu!");
- answers.push({name,word});
- document.getElementById("word").value="";
- render();
+function updateTimer(){
+ $("subtitle").textContent =
+  active ? "TEMPO: "+time+" SEGUNDOS" : "RODADA ENCERRADA";
 }
 
-function render(){
- document.getElementById("answers").innerHTML=answers.map(a=>
- `<div class="answer"><b>${safe(a.name)}</b>${safe(a.word)}</div>`
- ).join("");
+function addAnswer(name,word){
+ if(!active) return;
+
+ name = String(name || "Visitante").trim().slice(0,30);
+ word = String(word || "").trim().slice(0,60);
+
+ if(!name || !word) return;
+
+ if(normalize(word).charAt(0)!==letter) return;
+
+ if(answers.some(a=>normalize(a.name)===normalize(name))){
+  return;
+ }
+
+ answers.push({name,word});
+ renderAnswers();
+
+ $("speech").textContent = name+" respondeu "+word+"!";
+}
+
+function renderAnswers(){
+ $("counter").textContent = answers.length;
+
+ $("answers").innerHTML = "";
+
+ if(!answers.length){
+  $("answers").innerHTML =
+   '<div class="empty">Aguardando participantes...</div>';
+  return;
+ }
+
+ answers.forEach(a=>{
+  const row = document.createElement("div");
+  row.className = "answer-item";
+
+  const user = document.createElement("span");
+  user.textContent = a.name;
+
+  const word = document.createElement("b");
+  word.textContent = a.word;
+
+  row.append(user,word);
+  $("answers").appendChild(row);
+ });
 }
 
 function finish(){
- if(!active)return;
- active=false;clearInterval(clock);
- let groups={};
+ if(!active) return;
+
+ active = false;
+ clearInterval(clock);
+
+ const groups = {};
+
  answers.forEach(a=>{
- let k=a.word.toLowerCase();
- groups[k]=(groups[k]||0)+1;
+  const key = normalize(a.word);
+  groups[key] = (groups[key] || 0)+1;
  });
+
  answers.forEach(a=>{
- let pts=10/groups[a.word.toLowerCase()];
- scores[a.name]=(scores[a.name]||0)+pts;
+  const points = 10/groups[normalize(a.word)];
+  scores[a.name] = (scores[a.name] || 0)+points;
  });
- document.getElementById("fox").textContent="🦊🏆";
- document.getElementById("answers").innerHTML=answers.map(a=>
- `<div class="answer">${safe(a.name)}: ${safe(a.word)} <b>+${(10/groups[a.word.toLowerCase()]).toFixed(1)}</b></div>`
- ).join("");
- document.getElementById("ranking").innerHTML=
- Object.entries(scores).sort((a,b)=>b[1]-a[1]).map((a,i)=>
- `<div class="answer">${i+1}º ${safe(a[0])} <b>${a[1].toFixed(1)} pontos</b></div>`
- ).join("");
+
+ $("subtitle").textContent = "RODADA ENCERRADA!";
+ $("speech").textContent = "Confira o resultado e o ranking!";
+ $("prompt").textContent = "FIM DA RODADA!";
+ $("answers").innerHTML = "";
+
+ answers.forEach(a=>{
+  const points = 10/groups[normalize(a.word)];
+
+  const row = document.createElement("div");
+  row.className = "answer-item";
+
+  const label = document.createElement("span");
+  label.textContent = a.name+": "+a.word;
+
+  const score = document.createElement("b");
+  score.textContent = "+"+points.toFixed(1);
+
+  row.append(label,score);
+  $("answers").appendChild(row);
+ });
+
+ renderRanking();
 }
-function safe(s){
- return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function renderRanking(){
+ $("ranking").innerHTML = "";
+
+ const ordered = Object.entries(scores)
+  .sort((a,b)=>b[1]-a[1])
+  .slice(0,5);
+
+ if(!ordered.length){
+  $("ranking").textContent = "Nenhum jogador ainda.";
+  return;
+ }
+
+ ordered.forEach((item,index)=>{
+  const row = document.createElement("div");
+  row.className = "score-row";
+
+  const name = document.createElement("span");
+  name.textContent = (index+1)+"º "+item[0];
+
+  const points = document.createElement("b");
+  points.textContent = item[1].toFixed(1);
+
+  row.append(name,points);
+  $("ranking").appendChild(row);
+ });
 }
+
+if(socket){
+ socket.on("connect",()=>{
+  $("status").classList.add("online");
+  $("status").innerHTML = "<i></i> SERVIDOR ONLINE";
+ });
+
+ socket.on("disconnect",()=>{
+  $("status").classList.remove("online");
+  $("status").innerHTML = "<i></i> DESCONECTADO";
+ });
+
+ socket.on("chat",data=>{
+  if(!data) return;
+
+  const message = String(data.message || "").trim();
+
+  if(normalize(message)==="STOP"){
+   finish();
+   return;
+  }
+
+  addAnswer(data.user,message);
+ });
+}else{
+ $("status").innerHTML = "<i></i> SEM CONEXÃO";
+}
+
+async function fullScreen(){
+ const game = $("game");
+
+ try{
+  if(!document.fullscreenElement){
+   await game.requestFullscreen();
+  }else{
+   await document.exitFullscreen();
+  }
+ }catch(error){
+  $("speech").textContent =
+   "Seu navegador não permitiu a tela cheia.";
+ }
+}
+
 newRound();
 </script>
 </body>

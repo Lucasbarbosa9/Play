@@ -3,351 +3,57 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#ff9418">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#ff831b">
 <title>Raposa Play</title>
 <script src="/socket.io/socket.io.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-
-:root{
- --orange:#ff9418;
- --red:#ff3d27;
- --purple:#7534df;
- --dark:#291344;
- --yellow:#ffe34d;
-}
-
-html,body{
- width:100%;
- height:100%;
- overflow:hidden;
- font-family:"Trebuchet MS",Arial,sans-serif;
- background:var(--orange);
-}
-
-body{display:flex;justify-content:center}
-
-#game{
- position:relative;
- width:100%;
- height:100dvh;
- max-width:650px;
- overflow:hidden;
- padding:12px;
- display:flex;
- flex-direction:column;
- gap:9px;
- background:
- radial-gradient(circle at 10% 15%,#fff4a522 0 3px,transparent 4px),
- radial-gradient(circle at 80% 40%,#fff4a522 0 4px,transparent 5px),
- linear-gradient(160deg,#ffb91d,#ff801b 55%,#ff3826);
-}
-
-#game:before{
- content:"✦     ☆      ♧      ✧      ☆";
- position:absolute;
- inset:0;
- font-size:32px;
- line-height:110px;
- word-spacing:20px;
- color:white;
- opacity:.12;
- pointer-events:none;
- overflow:hidden;
-}
-
-header,.hero,.answers,.prompt,.bottom,.controls{
- position:relative;
- z-index:1;
-}
-
-header{
- height:8%;
- min-height:48px;
- display:flex;
- align-items:center;
- justify-content:space-between;
-}
-
-.logo{
- color:white;
- font-size:clamp(23px,6vw,36px);
- font-weight:1000;
- text-shadow:3px 3px var(--purple),4px 5px var(--dark);
-}
-
+html,body{width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#ff831b}
+:root{--orange:#ff831b;--red:#ff382b;--purple:#7138d8;--dark:#291344;--yellow:#ffe34b}
+#game{height:100dvh;width:100%;max-width:650px;margin:auto;padding:12px;display:flex;flex-direction:column;gap:9px;overflow:hidden;background:radial-gradient(circle at 15% 15%,#fff5 0 2px,transparent 3px),linear-gradient(155deg,#ffb91e,#ff7d19 55%,#ff3928);position:relative}
+header{display:flex;align-items:center;justify-content:space-between;min-height:43px}
+.logo{font-size:clamp(23px,6vw,36px);font-weight:1000;color:white;text-shadow:3px 3px var(--purple),4px 5px var(--dark)}
 .logo span{color:var(--yellow)}
-
-.status{
- background:#fff;
- color:var(--dark);
- border:3px solid var(--dark);
- border-radius:20px;
- padding:7px 10px;
- font-size:11px;
- font-weight:1000;
-}
-
-.status i{
- display:inline-block;
- width:8px;
- height:8px;
- background:#aaa;
- border-radius:50%;
- margin-right:5px;
-}
-
-.status.online i{background:#24c75a}
-
-.hero{
- height:21%;
- min-height:125px;
- display:grid;
- grid-template-columns:29% 71%;
- align-items:center;
-}
-
-.letter-circle{
- width:min(25vw,125px);
- height:min(25vw,125px);
- border-radius:50%;
- background:white;
- border:7px solid var(--dark);
- box-shadow:0 0 0 5px var(--yellow),0 7px var(--dark);
- display:grid;
- place-items:center;
- color:var(--orange);
- font-size:clamp(55px,15vw,85px);
- font-weight:1000;
- text-shadow:2px 3px #ffd34c;
- transform:rotate(-5deg);
-}
-
+.status{background:white;border:3px solid var(--dark);border-radius:30px;padding:7px 9px;font-size:10px;font-weight:900;color:var(--dark)}
+.hero{height:19%;min-height:110px;display:grid;grid-template-columns:29% 71%;align-items:center}
+.letter{width:min(25vw,125px);height:min(25vw,125px);border-radius:50%;display:grid;place-items:center;background:white;border:7px solid var(--dark);box-shadow:0 0 0 5px var(--yellow),0 7px var(--dark);font-size:clamp(55px,15vw,85px);font-weight:1000;color:var(--orange);transform:rotate(-5deg)}
 .category-area{text-align:center}
-
-.category-label{
- color:white;
- font-size:14px;
- font-weight:1000;
- text-shadow:2px 3px var(--dark);
- margin-bottom:8px;
-}
-
-.ribbon{
- background:linear-gradient(#a16bff,#7133dc);
- color:var(--yellow);
- border:5px solid var(--dark);
- border-radius:14px;
- padding:12px 5px;
- font-size:clamp(17px,4.5vw,25px);
- font-weight:1000;
- text-shadow:2px 3px var(--dark);
- box-shadow:0 6px var(--dark);
-}
-
-.subtitle{
- color:white;
- font-size:11px;
- font-weight:900;
- text-shadow:2px 2px var(--dark);
- margin-top:10px;
-}
-
-.answers{
- flex:1;
- min-height:0;
- background:white;
- border:5px solid var(--dark);
- border-radius:22px;
- box-shadow:0 7px #a52d18;
- padding:12px;
- display:flex;
- flex-direction:column;
-}
-
-.answers-title{
- display:flex;
- align-items:center;
- gap:10px;
- color:var(--dark);
- font-size:18px;
- font-weight:1000;
-}
-
-.counter{
- width:46px;
- height:46px;
- border-radius:50%;
- background:var(--yellow);
- border:4px solid var(--dark);
- display:grid;
- place-items:center;
- font-size:24px;
- color:var(--purple);
-}
-
-.answer-list{
- flex:1;
- min-height:0;
- overflow-y:auto;
- padding-top:8px;
-}
-
-.answer-item{
- display:flex;
- justify-content:space-between;
- gap:8px;
- padding:9px 5px;
- border-bottom:2px dashed #ddd;
- color:var(--dark);
- font-size:14px;
- font-weight:900;
- animation:appear .2s ease;
-}
-
-.answer-item b{color:var(--purple)}
-
-@keyframes appear{
- from{opacity:0;transform:translateY(8px)}
- to{opacity:1;transform:translateY(0)}
-}
-
-.empty{
- text-align:center;
- color:#a49aac;
- font-weight:900;
- margin-top:35px;
- font-size:14px;
-}
-
-.tip{
- color:#786d83;
- font-size:11px;
- font-weight:900;
- padding-top:8px;
-}
-
-.tip strong{color:var(--purple)}
-
-.prompt{
- min-height:43px;
- height:7%;
- border:4px solid var(--dark);
- background:var(--purple);
- color:white;
- border-radius:30px;
- display:grid;
- place-items:center;
- text-align:center;
- padding:5px;
- font-size:clamp(11px,3vw,15px);
- font-weight:1000;
- text-shadow:2px 2px var(--dark);
- box-shadow:0 4px var(--dark);
-}
-
-.bottom{
- height:17%;
- min-height:105px;
- display:grid;
- grid-template-columns:1fr 43%;
- gap:8px;
-}
-
-.mascot-area{
- display:flex;
- flex-direction:column;
- justify-content:center;
- gap:5px;
-}
-
-.mascot{
- font-size:clamp(48px,13vw,72px);
- text-align:center;
- filter:drop-shadow(3px 4px var(--dark));
-}
-
-.speech{
- background:white;
- color:var(--dark);
- border:4px solid var(--dark);
- border-radius:16px;
- padding:9px;
- font-size:clamp(10px,2.8vw,14px);
- font-weight:900;
- text-align:center;
- box-shadow:0 4px var(--dark);
-}
-
-.scoreboard{
- background:white;
- border:4px solid var(--dark);
- border-radius:17px;
- padding:8px;
- box-shadow:0 5px var(--dark);
- overflow:hidden;
-}
-
-.score-title{
- font-size:13px;
- font-weight:1000;
- color:var(--dark);
- margin-bottom:5px;
-}
-
-.score-row{
- display:flex;
- justify-content:space-between;
- gap:3px;
- padding:4px 0;
- border-bottom:1px solid #eee;
- font-size:clamp(9px,2.5vw,12px);
- font-weight:900;
- color:var(--dark);
-}
-
-.score-row b{color:var(--purple)}
-
-.controls{
- height:7%;
- min-height:46px;
- display:flex;
- gap:8px;
- align-items:center;
-}
-
-button{
- border:3px solid var(--dark);
- border-radius:14px;
- background:var(--yellow);
- color:var(--dark);
- font-size:12px;
- font-weight:1000;
- padding:10px 8px;
- box-shadow:0 4px var(--dark);
- cursor:pointer;
-}
-
-button:active{
- transform:translateY(3px);
- box-shadow:0 1px var(--dark);
-}
-
-.controls button{flex:1}
-#stop{background:#ff4b38;color:white}
-#fullscreen{background:var(--purple);color:white}
-
-@media(max-height:700px){
- #game{gap:5px;padding:7px}
- .hero{min-height:105px}
- .bottom{min-height:90px}
- .mascot{font-size:45px}
- .answers{padding:8px}
- .answer-item{padding:5px}
-}
-
+.small-title{font-size:13px;font-weight:1000;color:white;text-shadow:2px 2px var(--dark);margin-bottom:7px}
+.ribbon{background:var(--purple);border:5px solid var(--dark);border-radius:14px;color:var(--yellow);padding:12px 5px;font-size:clamp(17px,4.5vw,25px);font-weight:1000;text-shadow:2px 2px var(--dark);box-shadow:0 5px var(--dark)}
+#timer{font-size:17px;font-weight:1000;color:white;text-shadow:2px 2px var(--dark);margin-top:8px}
+#timer.urgent{color:#ffec4d;animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:scale(1.12)}}
+.panel{background:white;border:5px solid var(--dark);border-radius:20px;box-shadow:0 6px #a52d18;padding:10px;min-height:0}
+.answers{flex:1;display:flex;flex-direction:column}
+.panel-title{display:flex;justify-content:space-between;align-items:center;color:var(--dark);font-size:17px;font-weight:1000}
+.counter{background:var(--yellow);border:3px solid var(--dark);border-radius:50%;width:40px;height:40px;display:grid;place-items:center;font-size:20px}
+.answer-list{flex:1;overflow-y:auto;min-height:0;padding-top:7px}
+.answer-row{display:flex;justify-content:space-between;gap:8px;padding:8px 4px;border-bottom:2px dashed #ddd;font-size:13px;font-weight:900;color:var(--dark);animation:enter .2s}
+.answer-row b{color:var(--purple)}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.empty{text-align:center;color:#988da0;font-weight:900;margin-top:25px;font-size:13px}
+.prompt{background:var(--purple);border:4px solid var(--dark);border-radius:25px;padding:10px;text-align:center;color:white;font-size:12px;font-weight:1000;text-shadow:1px 2px var(--dark)}
+.bottom{height:17%;min-height:100px;display:grid;grid-template-columns:1fr 44%;gap:8px}
+.mascot-area{display:flex;flex-direction:column;justify-content:center;gap:5px}
+.mascot{text-align:center;font-size:clamp(45px,13vw,70px);filter:drop-shadow(3px 4px var(--dark))}
+.speech{background:white;border:4px solid var(--dark);border-radius:14px;padding:8px;text-align:center;color:var(--dark);font-size:11px;font-weight:900;box-shadow:0 4px var(--dark)}
+.ranking{background:white;border:4px solid var(--dark);border-radius:15px;padding:8px;overflow:hidden;box-shadow:0 4px var(--dark)}
+.rank-title{font-size:13px;font-weight:1000;color:var(--dark);margin-bottom:5px}
+.rank-row{display:flex;justify-content:space-between;gap:3px;border-bottom:1px solid #eee;padding:4px 0;font-size:10px;font-weight:900;color:var(--dark)}
+.rank-row b{color:var(--purple)}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+button{border:3px solid var(--dark);border-radius:12px;padding:10px 3px;background:var(--yellow);color:var(--dark);font-weight:1000;font-size:11px;box-shadow:0 4px var(--dark)}
+button:active{transform:translateY(3px);box-shadow:0 1px var(--dark)}
+#start{background:var(--purple);color:white}
+#stop{background:var(--red);color:white}
+.extra-controls{display:flex;gap:6px}
+.extra-controls button{flex:1}
+#giftAlert{display:none;position:absolute;z-index:10;left:7%;right:7%;top:34%;background:linear-gradient(120deg,#7138d8,#a24bfa);border:5px solid var(--yellow);border-radius:22px;padding:20px;text-align:center;color:white;font-weight:1000;font-size:20px;text-shadow:2px 2px var(--dark);box-shadow:0 0 30px #fff8;animation:enter .3s}
+#giftAlert.show{display:block}
+#giftText{font-size:15px;margin-top:8px}
+@media(max-height:680px){#game{padding:7px;gap:5px}.hero{min-height:95px}.bottom{min-height:85px}.panel{padding:7px}.answer-row{padding:5px}.mascot{font-size:42px}}
 </style>
 </head>
 
@@ -356,211 +62,226 @@ button:active{
 
 <header>
  <div class="logo">RAPOSA <span>PLAY</span></div>
- <div class="status" id="status"><i></i> CONECTANDO</div>
+ <div class="status" id="status">● CONECTANDO</div>
 </header>
 
 <section class="hero">
- <div class="letter-circle" id="letter">A</div>
+ <div class="letter" id="letter">A</div>
  <div class="category-area">
-  <div class="category-label">CATEGORIA</div>
+  <div class="small-title">SUA CATEGORIA</div>
   <div class="ribbon" id="category">ANIMAL</div>
-  <div class="subtitle" id="subtitle">Responda antes que o tempo acabe!</div>
+  <div id="timer">45 SEGUNDOS</div>
  </div>
 </section>
 
-<section class="answers">
- <div class="answers-title">
-  <div class="counter" id="counter">0</div>
-  RESPOSTAS
+<section class="panel answers">
+ <div class="panel-title">
+  <span>RESPOSTAS DA LIVE</span>
+  <span class="counter" id="counter">0</span>
  </div>
  <div class="answer-list" id="answers">
-  <div class="empty">Aguardando participantes...</div>
+  <div class="empty">Aguardando respostas...</div>
  </div>
- <div class="tip">Respostas repetidas dividem pontos. <strong>Seja original!</strong></div>
 </section>
 
-<div class="prompt" id="prompt">
- COMENTE SUA RESPOSTA NA LIVE!
-</div>
+<div class="prompt" id="prompt">MANDE SUA RESPOSTA NO CHAT!</div>
 
 <section class="bottom">
  <div class="mascot-area">
   <div class="mascot">🦊</div>
-  <div class="speech" id="speech">
-   Vamos começar! Prepare sua resposta!
-  </div>
+  <div class="speech" id="speech">A raposa está esperando você!</div>
  </div>
-
- <div class="scoreboard">
-  <div class="score-title">🏆 RANKING</div>
+ <div class="ranking">
+  <div class="rank-title">🏆 TOP 5</div>
   <div id="ranking">
-   <div class="score-row">Aguardando jogadores...</div>
+   <div class="rank-row">Nenhum jogador</div>
   </div>
  </div>
 </section>
 
 <div class="controls">
- <button onclick="newRound()">NOVA RODADA</button>
+ <button id="start" onclick="newRound()">NOVA RODADA</button>
  <button id="stop" onclick="finish()">STOP!</button>
- <button id="fullscreen" onclick="fullScreen()">TELA CHEIA</button>
+ <button onclick="fullScreen()">TELA CHEIA</button>
+</div>
+
+<div class="extra-controls">
+ <button onclick="toggleVoice()" id="voiceButton">VOZ: OFF</button>
+ <button onclick="toggleSound()" id="soundButton">SOM: OFF</button>
+</div>
+
+<div id="giftAlert">
+  PRESENTE RECEBIDO!
+  <div id="giftText"></div>
 </div>
 
 </main>
 
 <script>
-const socket = typeof io === "function" ? io() : null;
+const socket=typeof io==="function"?io():null;
+const $=id=>document.getElementById(id);
 
-const categories = [
- "ANIMAL","FRUTA","CIDADE OU ESTADO",
- "NOME","OBJETO","PAÍS","COMIDA",
- "MARCA","FILME","TIME","PROFISSÃO",
- "PERSONALIDADE","COR","DESENHO"
+const categories=[
+ "ANIMAL","FRUTA","CIDADE","NOME","OBJETO",
+ "PAÍS","COMIDA","MARCA","FILME","TIME",
+ "PROFISSÃO","COR","DESENHO","PERSONAGEM"
 ];
 
-const letters = "ABCDEFGHIJKLMNOPQRSTUV";
+const letters="ABCDEFGHIJKLMNOPQRSTUV";
 
-let letter = "A";
-let time = 45;
-let active = false;
-let clock = null;
-let answers = [];
-let scores = {};
-let round = 0;
-
-const $ = id => document.getElementById(id);
+let letter="A";
+let time=45;
+let active=false;
+let clock=null;
+let answers=[];
+let scores={};
+let voiceEnabled=false;
+let soundEnabled=false;
+let audioContext=null;
+let giftTimeout=null;
 
 function normalize(value){
- return value.normalize("NFD")
-  .replace(/[\u0300-\u036f]/g,"")
-  .toUpperCase().trim();
+ return String(value).normalize("NFD")
+ .replace(/[\u0300-\u036f]/g,"").toUpperCase().trim();
+}
+
+function speak(text){
+ if(!voiceEnabled||!window.speechSynthesis)return;
+ speechSynthesis.cancel();
+ const msg=new SpeechSynthesisUtterance(text);
+ msg.lang="pt-BR";
+ msg.rate=1;
+ msg.pitch=1.05;
+ speechSynthesis.speak(msg);
+}
+
+function beep(frequency=800,duration=.07){
+ if(!soundEnabled)return;
+ try{
+  audioContext=audioContext||new(window.AudioContext||window.webkitAudioContext)();
+  if(audioContext.state==="suspended")audioContext.resume();
+  const osc=audioContext.createOscillator();
+  const gain=audioContext.createGain();
+  osc.frequency.value=frequency;
+  gain.gain.value=.045;
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.start();
+  osc.stop(audioContext.currentTime+duration);
+ }catch(e){}
+}
+
+function toggleVoice(){
+ voiceEnabled=!voiceEnabled;
+ $("voiceButton").textContent=voiceEnabled?"VOZ: ON":"VOZ: OFF";
+ if(voiceEnabled)speak("Narrador da Raposa Play ativado!");
+}
+
+function toggleSound(){
+ soundEnabled=!soundEnabled;
+ $("soundButton").textContent=soundEnabled?"SOM: ON":"SOM: OFF";
+ if(soundEnabled)beep(900);
 }
 
 function newRound(){
  clearInterval(clock);
+ answers=[];
+ letter=letters[Math.floor(Math.random()*letters.length)];
+ const category=categories[Math.floor(Math.random()*categories.length)];
 
- answers = [];
- round++;
-
- letter = letters[Math.floor(Math.random()*letters.length)];
-
- const category = categories[
-  Math.floor(Math.random()*categories.length)
- ];
-
- $("letter").textContent = letter;
- $("category").textContent = category;
- $("subtitle").textContent =
-  "Vale mais quem ninguém falar!";
- $("counter").textContent = "0";
- $("answers").innerHTML =
-  '<div class="empty">Aguardando participantes...</div>';
- $("prompt").textContent =
-  "COMENTE " + category + " COM A LETRA " + letter;
- $("speech").textContent =
-  "Uma resposta por pessoa! Boa sorte!";
- $("ranking").innerHTML = "";
- $("letter").animate(
-  [{transform:"scale(.7) rotate(-5deg)"},{transform:"scale(1) rotate(-5deg)"}],
-  {duration:350}
- );
-
- time = 45;
- active = true;
+ $("letter").textContent=letter;
+ $("category").textContent=category;
+ $("counter").textContent="0";
+ $("answers").innerHTML='<div class="empty">Aguardando respostas...</div>';
+ $("prompt").textContent="COMENTE "+category+" COM A LETRA "+letter;
+ $("speech").textContent="Valendo! Boa sorte!";
+ time=45;
+ active=true;
  updateTimer();
+ speak("Nova rodada! Categoria "+category+". Letra "+letter+". Valendo!");
 
- clock = setInterval(()=>{
+ clock=setInterval(()=>{
   time--;
   updateTimer();
-  if(time<=0) finish();
+
+  if(time<=10&&time>0)beep(1100,.05);
+  if(time===10)speak("Dez segundos restantes!");
+  if(time===5)speak("Cinco segundos!");
+  if(time<=0)finish();
  },1000);
 }
 
 function updateTimer(){
- $("subtitle").textContent =
-  active ? "TEMPO: "+time+" SEGUNDOS" : "RODADA ENCERRADA";
+ $("timer").textContent=time+" SEGUNDOS";
+ $("timer").classList.toggle("urgent",time<=10);
 }
 
 function addAnswer(name,word){
- if(!active) return;
+ if(!active)return;
+ name=String(name||"Visitante").trim().slice(0,30);
+ word=String(word||"").trim().slice(0,60);
+ if(!name||!word)return;
 
- name = String(name || "Visitante").trim().slice(0,30);
- word = String(word || "").trim().slice(0,60);
+ if(normalize(word)[0]!==letter)return;
 
- if(!name || !word) return;
-
- if(normalize(word).charAt(0)!==letter) return;
-
- if(answers.some(a=>normalize(a.name)===normalize(name))){
-  return;
- }
+ if(answers.some(a=>normalize(a.name)===normalize(name)))return;
 
  answers.push({name,word});
  renderAnswers();
-
- $("speech").textContent = name+" respondeu "+word+"!";
+ $("speech").textContent=name+" respondeu!";
+ beep(650,.06);
 }
 
 function renderAnswers(){
- $("counter").textContent = answers.length;
-
- $("answers").innerHTML = "";
+ $("counter").textContent=answers.length;
+ $("answers").innerHTML="";
 
  if(!answers.length){
-  $("answers").innerHTML =
-   '<div class="empty">Aguardando participantes...</div>';
+  $("answers").innerHTML='<div class="empty">Aguardando respostas...</div>';
   return;
  }
 
  answers.forEach(a=>{
-  const row = document.createElement("div");
-  row.className = "answer-item";
-
-  const user = document.createElement("span");
-  user.textContent = a.name;
-
-  const word = document.createElement("b");
-  word.textContent = a.word;
-
+  const row=document.createElement("div");
+  row.className="answer-row";
+  const user=document.createElement("span");
+  user.textContent=a.name;
+  const word=document.createElement("b");
+  word.textContent=a.word;
   row.append(user,word);
   $("answers").appendChild(row);
  });
 }
 
 function finish(){
- if(!active) return;
-
- active = false;
+ if(!active)return;
+ active=false;
  clearInterval(clock);
+ $("timer").classList.remove("urgent");
+ $("timer").textContent="TEMPO ESGOTADO!";
+ $("prompt").textContent="FIM DA RODADA!";
+ $("speech").textContent="Confira a pontuação!";
+ speak("Tempo esgotado! Confira os resultados!");
 
- const groups = {};
+ const groups={};
 
  answers.forEach(a=>{
-  const key = normalize(a.word);
-  groups[key] = (groups[key] || 0)+1;
+  const key=normalize(a.word);
+  groups[key]=(groups[key]||0)+1;
  });
 
- answers.forEach(a=>{
-  const points = 10/groups[normalize(a.word)];
-  scores[a.name] = (scores[a.name] || 0)+points;
- });
-
- $("subtitle").textContent = "RODADA ENCERRADA!";
- $("speech").textContent = "Confira o resultado e o ranking!";
- $("prompt").textContent = "FIM DA RODADA!";
- $("answers").innerHTML = "";
+ $("answers").innerHTML="";
 
  answers.forEach(a=>{
-  const points = 10/groups[normalize(a.word)];
+  const points=groups[normalize(a.word)]===1?10:5;
+  scores[a.name]=(scores[a.name]||0)+points;
 
-  const row = document.createElement("div");
-  row.className = "answer-item";
-
-  const label = document.createElement("span");
-  label.textContent = a.name+": "+a.word;
-
-  const score = document.createElement("b");
-  score.textContent = "+"+points.toFixed(1);
-
+  const row=document.createElement("div");
+  row.className="answer-row";
+  const label=document.createElement("span");
+  label.textContent=a.name+": "+a.word;
+  const score=document.createElement("b");
+  score.textContent="+"+points;
   row.append(label,score);
   $("answers").appendChild(row);
  });
@@ -569,47 +290,56 @@ function finish(){
 }
 
 function renderRanking(){
- $("ranking").innerHTML = "";
-
- const ordered = Object.entries(scores)
-  .sort((a,b)=>b[1]-a[1])
-  .slice(0,5);
+ const ordered=Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ $("ranking").innerHTML="";
 
  if(!ordered.length){
-  $("ranking").textContent = "Nenhum jogador ainda.";
+  $("ranking").textContent="Nenhum jogador";
   return;
  }
 
  ordered.forEach((item,index)=>{
-  const row = document.createElement("div");
-  row.className = "score-row";
-
-  const name = document.createElement("span");
-  name.textContent = (index+1)+"º "+item[0];
-
-  const points = document.createElement("b");
-  points.textContent = item[1].toFixed(1);
-
+  const row=document.createElement("div");
+  row.className="rank-row";
+  const name=document.createElement("span");
+  name.textContent=["🥇","🥈","🥉","4º","5º"][index]+" "+item[0];
+  const points=document.createElement("b");
+  points.textContent=item[1]+" pts";
   row.append(name,points);
   $("ranking").appendChild(row);
  });
 }
 
+function showGift(data){
+ $("giftText").textContent=(data.user||"Alguém")+" enviou "+(data.gift||"um presente")+"!";
+ $("giftAlert").classList.add("show");
+ $("speech").textContent="Obrigado pelo carinho!";
+ speak("Obrigado pelo presente, "+(data.user||"visitante")+"!");
+ clearTimeout(giftTimeout);
+ giftTimeout=setTimeout(()=>$("giftAlert").classList.remove("show"),4500);
+}
+
+async function fullScreen(){
+ try{
+  if(!document.fullscreenElement)await $("game").requestFullscreen();
+  else await document.exitFullscreen();
+ }catch(e){
+  $("speech").textContent="Tela cheia não disponível neste navegador.";
+ }
+}
+
 if(socket){
  socket.on("connect",()=>{
-  $("status").classList.add("online");
-  $("status").innerHTML = "<i></i> SERVIDOR ONLINE";
+  $("status").textContent="● SERVIDOR ONLINE";
  });
 
  socket.on("disconnect",()=>{
-  $("status").classList.remove("online");
-  $("status").innerHTML = "<i></i> DESCONECTADO";
+  $("status").textContent="● DESCONECTADO";
  });
 
  socket.on("chat",data=>{
-  if(!data) return;
-
-  const message = String(data.message || "").trim();
+  if(!data)return;
+  const message=String(data.message||"").trim();
 
   if(normalize(message)==="STOP"){
    finish();
@@ -618,23 +348,18 @@ if(socket){
 
   addAnswer(data.user,message);
  });
-}else{
- $("status").innerHTML = "<i></i> SEM CONEXÃO";
-}
 
-async function fullScreen(){
- const game = $("game");
+ socket.on("gift",showGift);
 
- try{
-  if(!document.fullscreenElement){
-   await game.requestFullscreen();
+ socket.on("tiktok-status",data=>{
+  if(data.connected){
+   $("status").textContent="● TIKTOK CONECTADO";
   }else{
-   await document.exitFullscreen();
+   $("status").textContent="● TIKTOK OFFLINE";
   }
- }catch(error){
-  $("speech").textContent =
-   "Seu navegador não permitiu a tela cheia.";
- }
+ });
+}else{
+ $("status").textContent="● SEM SOCKET";
 }
 
 newRound();
